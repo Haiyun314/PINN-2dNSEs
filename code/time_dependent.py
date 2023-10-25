@@ -13,12 +13,19 @@ tf.keras.backend.set_floatx(DTYPE)
 
 
 def InitializeModel(num_hidden_layers=5, num_neurons_per_layer=8):
+    '''
+    :param num_hidden_layers: numbers of hidden layers
+    :param num_neurons_per_layer: numbers of nuerons each layer
+    :return: dnn model
+    '''
     model = tf.keras.Sequential()  # Initialize a feedforward neural network
     model.add(tf.keras.Input(3))  # Input is two-dimensional
+
+    # Append hidden layers
+
     model.add(tf.keras.layers.Dense(10,
                                     activation=tf.keras.activations.get('tanh'),
                                     kernel_initializer='glorot_normal', kernel_regularizer=tf.keras.regularizers.l2))
-    # Append hidden layers
     for _ in range(num_hidden_layers - 2):
         model.add(tf.keras.layers.Dense(num_neurons_per_layer,
                                         activation=tf.keras.activations.get('tanh'),
@@ -272,6 +279,7 @@ y = np.linspace(-1, 1, num_test_samples)
 x, y = np.meshgrid(x, y)
 data_u = {}
 data_psi = {}
+
 for j in range(number_of_frame):
     t = [run_time*j/number_of_frame for i in range(np.square(num_test_samples))]
     xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
