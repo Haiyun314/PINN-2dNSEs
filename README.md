@@ -27,5 +27,5 @@ $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 
 **Test Result**
 
-left side is the velocity field. right hand side is the pressure field.
+Left side is the velocity field. Right hand side is the pressure field.
 ![Lid-Driven](./image/Lid-Driven.gif)
