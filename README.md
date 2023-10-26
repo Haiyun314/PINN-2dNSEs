@@ -17,7 +17,7 @@ $\mathbf{v} = \left ( u , v \right )$ is the velocity vector. $\mathrm{}{p}$ is 
 
 **Loss functions**
 
-![loss-functions](./image/loss_functions.png)
+![loss-functions](./image/Loss_Functions.png)
 
 $$ F_x = \frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} + v \frac{\partial u}{\partial y} + \frac{1}{\rho} \frac{\partial p}{\partial x} - \nu \left(\frac{\partial^2 u}{\partial x^2} - \frac{\partial^2 u}{\partial y^2}\right) $$
 
@@ -26,5 +26,6 @@ $$ F_y = \frac{\partial v}{\partial t} + u \frac{\partial v}{\partial x} + v \fr
 $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 
 **Test Result**
+
 left side is the velocity field. right hand side is the pressure field.
 ![Lid-Driven](./image/Lid-Driven.gif)
