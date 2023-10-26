@@ -6,7 +6,7 @@ PINN for 2d NSEs test with lid driven cavity
 
 $$ \rho \left ( \partial_{t} \mathbf{v} +  \left ( \mathbf{v}  \cdot \bigtriangledown  \right ) \mathbf{v}  \right ) - \eta \bigtriangleup \mathbf{v} + \bigtriangledown \mathbf{p} = \mathbf{f} $$
 
-in $' \Omega '$ $' \times '$ $' \left ( 0, T \right ) '$,
+in $ \Omega $ $ \times $ $ \left ( 0, T \right ) $,
 
 $$ div \mathbf{v}  = 0 $$
 
