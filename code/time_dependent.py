@@ -3,12 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from optimizer import L_BFGS_B
 from matplotlib.colors import Normalize
+
 tf.random.set_seed(1234)
 import matplotlib.animation as animation
 
-
 # Set data type
-DTYPE='float32'
+DTYPE = 'float32'
 tf.keras.backend.set_floatx(DTYPE)
 
 
@@ -29,7 +29,8 @@ def InitializeModel(num_hidden_layers=5, num_neurons_per_layer=8):
     for _ in range(num_hidden_layers - 2):
         model.add(tf.keras.layers.Dense(num_neurons_per_layer,
                                         activation=tf.keras.activations.get('tanh'),
-                                        kernel_initializer='glorot_normal', kernel_regularizer= tf.keras.regularizers.l2))
+                                        kernel_initializer='glorot_normal',
+                                        kernel_regularizer=tf.keras.regularizers.l2))
     model.add(tf.keras.layers.Dense(10,
                                     activation=tf.keras.activations.get('tanh'),
                                     kernel_initializer='glorot_normal', kernel_regularizer=tf.keras.regularizers.l2))
@@ -70,7 +71,7 @@ class GradientLayer(tf.keras.layers.Layer):
             v_grads: v and its gradients.
         """
 
-        x, y, t = [ xyt[..., i, tf.newaxis] for i in range(xyt.shape[-1]) ]
+        x, y, t = [xyt[..., i, tf.newaxis] for i in range(xyt.shape[-1])]
         with tf.GradientTape(persistent=True) as ggg:
             ggg.watch(x)
             ggg.watch(y)
@@ -83,11 +84,11 @@ class GradientLayer(tf.keras.layers.Layer):
                     g.watch(y)
                     psi_p = self.model(tf.concat([x, y, t], axis=-1))
                     psi = psi_p[..., 0, tf.newaxis]
-                    p   = psi_p[..., 1, tf.newaxis]
-                u   =  g.batch_jacobian(psi, y)[..., 0]
-                v   = -g.batch_jacobian(psi, x)[..., 0]
-                p_x =  g.batch_jacobian(p,   x)[..., 0]
-                p_y =  g.batch_jacobian(p,   y)[..., 0]
+                    p = psi_p[..., 1, tf.newaxis]
+                u = g.batch_jacobian(psi, y)[..., 0]
+                v = -g.batch_jacobian(psi, x)[..., 0]
+                p_x = g.batch_jacobian(p, x)[..., 0]
+                p_y = g.batch_jacobian(p, y)[..., 0]
                 del g
             u_t = gg.batch_jacobian(u, t)[..., 0]
             v_t = gg.batch_jacobian(v, t)[..., 0]
@@ -159,14 +160,14 @@ class PINN:
         v, v_x, v_y, v_xx, v_yy = v_grads
         u_t, v_t = d_time
         # compute equation loss
-        u_eqn = u*u_x + v*u_y + u_t + p_x/self.rho - self.nu*(u_xx + u_yy)
-        v_eqn = u*v_x + v*v_y + v_t + p_y/self.rho - self.nu*(v_xx + v_yy)
+        u_eqn = u * u_x + v * u_y + u_t + p_x / self.rho - self.nu * (u_xx + u_yy)
+        v_eqn = u * v_x + v * v_y + v_t + p_y / self.rho - self.nu * (v_xx + v_yy)
 
         # divergence free condition
         f_div = u_y + v_x
 
         uv_eqn = tf.concat([u_eqn, v_eqn], axis=-1)
-        div_e = tf.concat([f_div, f_div], axis= -1)
+        div_e = tf.concat([f_div, f_div], axis=-1)
 
         # compute gradients relative to boundary condition
         psi_bnd, _, u_grads_bnd, v_grads_bnd, d_time = self.grads(xyt_bnd)
@@ -177,7 +178,7 @@ class PINN:
 
         # build PINN model for the time dependent Navier-Stokes equation
         return tf.keras.models.Model(
-            inputs=[xyt_eqn, xyt_bnd], outputs=[uv_eqn,div_e, psi_bnd, uv_bnd])
+            inputs=[xyt_eqn, xyt_bnd], outputs=[uv_eqn, div_e, psi_bnd, uv_bnd])
 
 
 # number of training samples
@@ -202,16 +203,15 @@ pinn = PINN(network, rho=rho, nu=nu).build()
 run_time = 8
 number_of_frame = 300
 
-
 # create training input
-t = [[run_time*i/num_train_samples + np.random.rand()] for i in range(num_train_samples)]
-xy_eqn = np.random.rand(num_train_samples, 2)*2-1
+t = [[run_time * i / num_train_samples + np.random.rand()] for i in range(num_train_samples)]
+xy_eqn = np.random.rand(num_train_samples, 2) * 2 - 1
 xyt_eqn = np.hstack((xy_eqn, t))
-xy_ub = np.random.rand(num_train_samples//2, 2)  # top-bottom boundaries
-xy_ub[..., 1] = np.round(xy_ub[..., 1])          # y-position is 0 or 1
-xy_lr = np.random.rand(num_train_samples//2, 2)  # left-right boundaries
-xy_lr[..., 0] = np.round(xy_lr[..., 0])          # x-position is 0 or 1
-xy_bnd = np.random.permutation(np.concatenate([xy_ub, xy_lr]))*2-1
+xy_ub = np.random.rand(num_train_samples // 2, 2)  # top-bottom boundaries
+xy_ub[..., 1] = np.round(xy_ub[..., 1])  # y-position is 0 or 1
+xy_lr = np.random.rand(num_train_samples // 2, 2)  # left-right boundaries
+xy_lr[..., 0] = np.round(xy_lr[..., 0])  # x-position is 0 or 1
+xy_bnd = np.random.permutation(np.concatenate([xy_ub, xy_lr])) * 2 - 1
 xyt_bnd = np.hstack((xy_bnd, t))
 x_train = [xyt_eqn, xyt_bnd]
 
@@ -219,11 +219,10 @@ x_train = [xyt_eqn, xyt_bnd]
 zeros = np.zeros((num_train_samples, 2))
 uv_bnd = np.zeros((num_train_samples, 2))
 uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
-y_train = [zeros,zeros, zeros, uv_bnd]
-
+y_train = [zeros, zeros, zeros, uv_bnd]
 
 # train the model using L-BFGS-B algorithm
-lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter = 3000)
+lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=3000)
 lbfgs.fit()
 
 
@@ -243,9 +242,11 @@ def uv(network, xy):
         g.watch(xy)
         psi_p = network(xy)
     psi_p_j = g.batch_jacobian(psi_p, xy)
-    u =  psi_p_j[..., 0, 1]
+    u = psi_p_j[..., 0, 1]
     v = -psi_p_j[..., 0, 0]
     return u.numpy(), v.numpy()
+
+
 def contour(grid, x, y, z, title, levels=50):
     """
     Contour plot.
@@ -281,11 +282,11 @@ data_u = {}
 data_psi = {}
 
 for j in range(number_of_frame):
-    t = [run_time*j/number_of_frame for i in range(np.square(num_test_samples))]
+    t = [run_time * j / number_of_frame for i in range(np.square(num_test_samples))]
     xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
     # predict (psi, p)
     psi_p = network.predict(xyt, batch_size=len(xyt))
-    psi, p = [ psi_p[..., i].reshape(x.shape) for i in range(psi_p.shape[-1]) ]
+    psi, p = [psi_p[..., i].reshape(x.shape) for i in range(psi_p.shape[-1])]
     # compute (u, v)
     u, v = uv(network, xyt)
     u = u.reshape(x.shape)
@@ -293,16 +294,27 @@ for j in range(number_of_frame):
     data_u[j] = x, y, u, v
     data_psi[j] = psi.reshape(x.shape)
 
-
 fig, ax = plt.subplots(1, 2)
+
+
 def animate(i):
+    # clear present plot on the axis to show animation
     ax[0].clear()
     ax[1].clear()
+
     _x, _y, _u, _v = data_u[i]
     ax[0].quiver(_x, _y, _u, _v, cmap='plasma')
     ax[1].contourf(x, y, data_psi[i], cmap='plasma')
+
+    # aspect ratio of plot is preserved
     ax[0].set_aspect('equal')
     ax[1].set_aspect('equal')
+
+    # set title for subpltos
+    ax[0].set_title('Velocity Field')
+    ax[1].set_title('Pressure Field')
+
+
 # Call animate method
 ani = animation.FuncAnimation(fig, animate, number_of_frame, interval=50, blit=False)
 
@@ -310,4 +322,3 @@ anis = animation.FFMpegWriter(fps=20)
 ani.save('navierstokes.mp4', writer=anis)
 # Display the plot
 plt.show()
-

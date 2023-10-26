@@ -26,4 +26,5 @@ $$ F_y = \frac{\partial v}{\partial t} + u \frac{\partial v}{\partial x} + v \fr
 $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 
 **Test Result**
+left side is the velocity field. right hand side is the pressure field.
 ![Lid-Driven](./image/Lid-Driven.gif)
