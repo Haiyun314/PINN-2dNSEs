@@ -11,7 +11,7 @@ in $ \Omega $ $ \times $ $ \left ( 0, T \right ) $,
 $$ div \mathbf{v}  = 0 $$
 
 
-in $' \Omega '$ $' \times '$ $'\left ( 0, T \right ),'$
+in $ \Omega $ $ \times $ $ \left ( 0, T \right ), $
 
-$'\mathbf{v} = \left ( u , v \right ) '$ is the velocity vector. $'\mathrm{}{p} '$ is the pressure. $'\mathrm{\rho} '$ is the density and $'\mathrm{\eta}'$ is the viscosity.
+$ \mathbf{v} = \left ( u , v \right )  $ is the velocity vector. $ \mathrm{}{p}  $ is the pressure. $ \mathrm{\rho}  $ is the density and $ \mathrm{\eta} $ is the viscosity.
 
