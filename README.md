@@ -17,9 +17,7 @@ $\mathbf{v} = \left ( u , v \right )$ is the velocity vector. $\mathrm{}{p}$ is 
 
 ***Loss functions***
 
-$\mathbf{L} _ {boundary} = \frac{1}{\mathbf{N}_{boundary}} \sum_{i=1}^{\mathbf{N}_{boundary}} \left ( u\left ( x_i \right ) - g\left ( x_i \right )  \right ) ^{2}$
-
-$$ \mathbf{L} _ {internal} = \frac{1}{\mathbf{N}_{internal}} \sum_{i=1}^{\mathbf{N}_{internal}} \left ( F_x  \right ) ^{2} + \left ( F_y  \right ) ^{2} + \left ( D_{free}  \right ) ^{2} $$
+![loss-functions](./image/loss_functions.png)
 
 $$ F_x = \frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} + v \frac{\partial u}{\partial y} + \frac{1}{\rho} \frac{\partial p}{\partial x} - \nu \left(\frac{\partial^2 u}{\partial x^2} - \frac{\partial^2 u}{\partial y^2}\right) $$
 
