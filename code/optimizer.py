@@ -2,6 +2,7 @@ import scipy.optimize
 import numpy as np
 import tensorflow as tf
 
+
 class L_BFGS_B:
     """
     Optimize the keras network model using L-BFGS-B algorithm.
@@ -34,8 +35,8 @@ class L_BFGS_B:
 
         # set attributes
         self.model = model
-        self.x_train = [ tf.constant(x, dtype=tf.float32) for x in x_train ]
-        self.y_train = [ tf.constant(y, dtype=tf.float32) for y in y_train ]
+        self.x_train = [tf.constant(x, dtype=tf.float32) for x in x_train]
+        self.y_train = [tf.constant(y, dtype=tf.float32) for y in y_train]
         self.factr = factr
         self.pgtol = pgtol
         self.m = m
@@ -45,8 +46,8 @@ class L_BFGS_B:
         # initialize the progress bar
         self.progbar = tf.keras.callbacks.ProgbarLogger(
             count_mode='steps', stateful_metrics=self.metrics)
-        self.progbar.set_params( {
-            'verbose':1, 'epochs':1, 'steps':self.maxiter, 'metrics':self.metrics})
+        self.progbar.set_params({
+            'verbose': 1, 'epochs': 1, 'steps': self.maxiter, 'metrics': self.metrics})
 
     def set_weights(self, flat_weights):
         """
@@ -57,12 +58,12 @@ class L_BFGS_B:
         """
 
         # get model weights
-        shapes = [ w.shape for w in self.model.get_weights() ]
+        shapes = [w.shape for w in self.model.get_weights()]
         # compute splitting indices
-        split_ids = np.cumsum([ np.prod(shape) for shape in [0] + shapes ])
+        split_ids = np.cumsum([np.prod(shape) for shape in [0] + shapes])
         # reshape weights
-        weights = [ flat_weights[from_id:to_id].reshape(shape)
-            for from_id, to_id, shape in zip(split_ids[:-1], split_ids[1:], shapes) ]
+        weights = [flat_weights[from_id:to_id].reshape(shape)
+                   for from_id, to_id, shape in zip(split_ids[:-1], split_ids[1:], shapes)]
         # set weights to the model
         self.model.set_weights(weights)
 
@@ -100,7 +101,7 @@ class L_BFGS_B:
         loss, grads = self.tf_evaluate(self.x_train, self.y_train)
         # convert tf.Tensor to flatten ndarray
         loss = loss.numpy().astype('float64')
-        grads = np.concatenate([ g.numpy().flatten() for g in grads ]).astype('float64')
+        grads = np.concatenate([g.numpy().flatten() for g in grads]).astype('float64')
 
         return loss, grads
 
@@ -122,14 +123,14 @@ class L_BFGS_B:
 
         # get initial weights as a flat vector
         initial_weights = np.concatenate(
-            [ w.flatten() for w in self.model.get_weights() ])
+            [w.flatten() for w in self.model.get_weights()])
         # optimize the weight vector
         print('Optimizer: L-BFGS-B (maxiter={})'.format(self.maxiter))
         self.progbar.on_train_begin()
         self.progbar.on_epoch_begin(1)
         scipy.optimize.fmin_l_bfgs_b(func=self.evaluate, x0=initial_weights,
-            factr=self.factr, pgtol=self.pgtol, m=self.m,
-            maxls=self.maxls, maxiter=self.maxiter, callback = self.callback)
+                                     factr=self.factr, pgtol=self.pgtol, m=self.m,
+                                     maxls=self.maxls, maxiter=self.maxiter, callback=self.callback)
         print('testing')
         self.progbar.on_epoch_end(1)
         self.progbar.on_train_end()

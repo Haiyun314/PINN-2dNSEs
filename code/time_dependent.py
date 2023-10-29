@@ -25,15 +25,17 @@ def InitializeModel(num_hidden_layers=5, num_neurons_per_layer=8):
 
     model.add(tf.keras.layers.Dense(10,
                                     activation=tf.keras.activations.get('tanh'),
-                                    kernel_initializer='glorot_normal', kernel_regularizer=tf.keras.regularizers.l2))
+                                    kernel_initializer='glorot_normal',
+                                    kernel_regularizer=tf.keras.regularizers.l2(0.01)))
     for _ in range(num_hidden_layers - 2):
         model.add(tf.keras.layers.Dense(num_neurons_per_layer,
                                         activation=tf.keras.activations.get('tanh'),
                                         kernel_initializer='glorot_normal',
-                                        kernel_regularizer=tf.keras.regularizers.l2))
+                                        kernel_regularizer=tf.keras.regularizers.l2(0.01)))
     model.add(tf.keras.layers.Dense(10,
                                     activation=tf.keras.activations.get('tanh'),
-                                    kernel_initializer='glorot_normal', kernel_regularizer=tf.keras.regularizers.l2))
+                                    kernel_initializer='glorot_normal',
+                                    kernel_regularizer=tf.keras.regularizers.l2(0.01)))
     # Output is two-dimensional
     model.add(tf.keras.layers.Dense(2))
 
@@ -193,18 +195,18 @@ rho = 1
 # viscosity
 nu = 0.01
 
+# setting for animation
+run_time = 8
+number_of_frame = 300
+
 # build a core network model
 network = InitializeModel()
 network.summary()
 # build a PINN model
 pinn = PINN(network, rho=rho, nu=nu).build()
 
-# create an animate
-run_time = 8
-number_of_frame = 300
-
 # create training input
-t = [[run_time * i / num_train_samples + np.random.rand()] for i in range(num_train_samples)]
+t = [[run_time * i / num_train_samples] for i in range(num_train_samples)]
 xy_eqn = np.random.rand(num_train_samples, 2) * 2 - 1
 xyt_eqn = np.hstack((xy_eqn, t))
 xy_ub = np.random.rand(num_train_samples // 2, 2)  # top-bottom boundaries
@@ -222,8 +224,9 @@ uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
 y_train = [zeros, zeros, zeros, uv_bnd]
 
 # train the model using L-BFGS-B algorithm
-lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=3000)
+lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=300)
 lbfgs.fit()
+
 
 
 def uv(network, xy):
@@ -275,7 +278,6 @@ def contour(grid, x, y, z, title, levels=50):
 # create meshgrid coordinates (x, y) for test plots
 x = np.linspace(-1, 1, num_test_samples)
 y = np.linspace(-1, 1, num_test_samples)
-# t = [i/np.square(num_test_samples) for i in range(np.square(num_test_samples))]
 
 x, y = np.meshgrid(x, y)
 data_u = {}
@@ -295,6 +297,8 @@ for j in range(number_of_frame):
     data_psi[j] = psi.reshape(x.shape)
 
 fig, ax = plt.subplots(1, 2)
+# set the distance of two plot
+plt.subplots_adjust(wspace=1)
 
 
 def animate(i):
@@ -317,8 +321,8 @@ def animate(i):
 
 # Call animate method
 ani = animation.FuncAnimation(fig, animate, number_of_frame, interval=50, blit=False)
-
 anis = animation.FFMpegWriter(fps=20)
-ani.save('navierstokes.mp4', writer=anis)
+ani.save('../image/Lid-Driven_.gif', writer='pillow')
+
 # Display the plot
 plt.show()
