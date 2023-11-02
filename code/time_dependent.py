@@ -196,7 +196,7 @@ rho = 1
 nu = 0.01
 
 # setting for animation
-run_time = 8
+run_time = 4
 number_of_frame = 300
 
 # build a core network model
@@ -224,7 +224,7 @@ uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
 y_train = [zeros, zeros, zeros, uv_bnd]
 
 # train the model using L-BFGS-B algorithm
-lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=300)
+lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=3000)
 lbfgs.fit()
 
 
