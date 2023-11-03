@@ -1,2 +1,6 @@
 .DS_Store
 /__pycache__/
+./image/.DS_Store
+./code/__pycache__/
+./code/.DS_Store
+
