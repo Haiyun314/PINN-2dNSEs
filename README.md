@@ -2,6 +2,8 @@
 # PINN-2dNSEs
 PINN for 2d NSEs test with lid driven cavity
 
+For better performance, we might need an advanced architecture for PINNs, like CNN for computer vision, self-attention for NLP
+
 **Navier Stokes Equations**
 
 $$ \rho \left ( \partial_{t} \mathbf{v} +  \left ( \mathbf{v}  \cdot \bigtriangledown  \right ) \mathbf{v}  \right ) - \eta \bigtriangleup \mathbf{v} + \bigtriangledown \mathbf{p} = \mathbf{f} $$
@@ -13,7 +15,7 @@ $$ div \mathbf{v}  = 0 $$
 
 in $\Omega$ $\times$ $\left ( 0, T \right ),$
 
-$\mathbf{v} = \left ( u , v \right )$ is the velocity vector. $\mathrm{}{p}$ is the pressure. $\mathrm{\rho}$ is the density and $\mathrm{\eta}$ is the viscosity. div refers to divergence, divergence free condition, which means the fluid is incompressible
+$\mathbf{v} = \left ( u , v \right )$ is the velocity vector. $\mathrm{}{p}$ is the pressure. $\mathrm{\rho}$ is the density and $\mathrm{\eta}$ is the viscosity. $div$ refers to divergence, divergence free condition, which means the fluid is incompressible
 
 **Loss functions**
 

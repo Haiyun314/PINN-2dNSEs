@@ -228,7 +228,6 @@ lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=3000)
 lbfgs.fit()
 
 
-
 def uv(network, xy):
     """
     Compute flow velocities (u, v) for the network with output (psi, p).
