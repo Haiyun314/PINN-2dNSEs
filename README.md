@@ -8,7 +8,7 @@ $$ \rho \left ( \partial_{t} \mathbf{v} +  \left ( \mathbf{v}  \cdot \bigtriangl
 
 in $\Omega$ $\times$ $\left ( 0, T \right )$,
 
-$$ div \mathbf{v}  = 0 $$
+$$ div \mathbf{v}  = 0 $$ divergence free condition, which means the fluid is incompressible
 
 
 in $\Omega$ $\times$ $\left ( 0, T \right ),$

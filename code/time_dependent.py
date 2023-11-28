@@ -326,3 +326,4 @@ ani.save('../image/Lid-Driven_.gif', writer='pillow')
 
 # Display the plot
 plt.show()
+
