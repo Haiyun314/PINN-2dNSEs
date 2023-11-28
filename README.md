@@ -8,12 +8,12 @@ $$ \rho \left ( \partial_{t} \mathbf{v} +  \left ( \mathbf{v}  \cdot \bigtriangl
 
 in $\Omega$ $\times$ $\left ( 0, T \right )$,
 
-$$ div \mathbf{v}  = 0 $$ divergence free condition, which means the fluid is incompressible
+$$ div \mathbf{v}  = 0 $$ 
 
 
 in $\Omega$ $\times$ $\left ( 0, T \right ),$
 
-$\mathbf{v} = \left ( u , v \right )$ is the velocity vector. $\mathrm{}{p}$ is the pressure. $\mathrm{\rho}$ is the density and $\mathrm{\eta}$ is the viscosity.
+$\mathbf{v} = \left ( u , v \right )$ is the velocity vector. $\mathrm{}{p}$ is the pressure. $\mathrm{\rho}$ is the density and $\mathrm{\eta}$ is the viscosity. div refers to divergence, divergence free condition, which means the fluid is incompressible
 
 **Loss functions**
 
@@ -29,3 +29,4 @@ $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 
 Left side is the velocity field. Right hand side is the pressure field.
 ![Lid-Driven](./image/Lid-Driven.gif)
+
