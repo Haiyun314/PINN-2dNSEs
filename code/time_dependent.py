@@ -13,13 +13,19 @@ tf.keras.backend.set_floatx(DTYPE)
 
 
 def InitializeModel(num_hidden_layers=5, num_neurons_per_layer=8):
-    '''
-    :param num_hidden_layers: numbers of hidden layers
-    :param num_neurons_per_layer: numbers of nuerons each layer
-    :return: dnn model
-    '''
+    """
+    Initialize the DNN model
+
+    Args:
+        num_hidden_layers: number of hidden layers
+        num_neurons_per_layer : number of neurons each layer
+
+    Returns:
+        model: return the DNN model (the output refers to the psi and pressure, the gradient of psi represents velocity)
+    """
+    
     model = tf.keras.Sequential()  # Initialize a feedforward neural network
-    model.add(tf.keras.Input(3))  # Input is two-dimensional
+    model.add(tf.keras.Input(3))  # Input is three-dimensional
 
     # Append hidden layers
 
@@ -36,15 +42,16 @@ def InitializeModel(num_hidden_layers=5, num_neurons_per_layer=8):
                                     activation=tf.keras.activations.get('tanh'),
                                     kernel_initializer='glorot_normal',
                                     kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-    # Output is two-dimensional
-    model.add(tf.keras.layers.Dense(2))
+    
+    model.add(tf.keras.layers.Dense(2))     # Output is two-dimensional
+
 
     return model
 
 
 class GradientLayer(tf.keras.layers.Layer):
     """
-    Custom layer to compute derivatives for the steady Navier-Stokes equation.
+    Custom layer to compute derivatives for the time dependent Navier-Stokes equation.
 
     Attributes:
         model: keras network model.
@@ -61,7 +68,7 @@ class GradientLayer(tf.keras.layers.Layer):
 
     def call(self, xyt):
         """
-        Computing derivatives for the steady Navier-Stokes equation.
+        Computing derivatives for the time dependent Navier-Stokes equation.
 
         Args:
             xyt: input variable.
@@ -115,10 +122,10 @@ class GradientLayer(tf.keras.layers.Layer):
 
 class PINN:
     """
-    Build a physics informed neural network (PINN) model for the steady Navier-Stokes equation.
+    Build a physics informed neural network (PINN) model for the time dependent Navier-Stokes equation.
 
     Attributes:
-        network: keras network model with input (x, y) and output (psi, p).
+        network: keras network model with input (x, y, t) and output (psi, p).
         rho: density.
         nu: viscosity.
         grads: gradient layer.
@@ -139,13 +146,15 @@ class PINN:
 
     def build(self):
         """
-        Build a PINN model for the steady Navier-Stokes equation.
+        Build a PINN model for the time dependent Navier-Stokes equation.
 
         Returns:
             PINN model for the steady Navier-Stokes equation with
                 input: [ (x, y, t) relative to equation,
                          (x, y, t) relative to boundary condition ],
-                output: [ (u, v) relative to equation (must be zero),
+                output: [ (u, v) relative to equation (must be zero), because in our case, we assume that the external force, like
+                          gravity, equal to zero, here (u, v) represent the u,v directional equations, not the velocity
+                          (f_div, f_div) relative to equation (must be zero), divergence free condition,
                           (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same dimensions),
                           (u, v) relative to boundary condition ]
         """
@@ -181,6 +190,10 @@ class PINN:
         # build PINN model for the time dependent Navier-Stokes equation
         return tf.keras.models.Model(
             inputs=[xyt_eqn, xyt_bnd], outputs=[uv_eqn, div_e, psi_bnd, uv_bnd])
+    
+    def save(self):
+        self.network.save()
+        tf.keras.models.save_model
 
 
 # number of training samples
@@ -217,6 +230,7 @@ xy_bnd = np.random.permutation(np.concatenate([xy_ub, xy_lr])) * 2 - 1
 xyt_bnd = np.hstack((xy_bnd, t))
 x_train = [xyt_eqn, xyt_bnd]
 
+
 # create training output
 zeros = np.zeros((num_train_samples, 2))
 uv_bnd = np.zeros((num_train_samples, 2))
@@ -226,6 +240,7 @@ y_train = [zeros, zeros, zeros, uv_bnd]
 # train the model using L-BFGS-B algorithm
 lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=3000)
 lbfgs.fit()
+
 
 
 def uv(network, xy):
@@ -248,30 +263,6 @@ def uv(network, xy):
     v = -psi_p_j[..., 0, 0]
     return u.numpy(), v.numpy()
 
-
-def contour(grid, x, y, z, title, levels=50):
-    """
-    Contour plot.
-
-    Args:
-        grid: plot position.
-        x: x-array.
-        y: y-array.
-        z: z-array.
-        title: title string.
-        levels: number of contour lines.
-    """
-
-    # get the value range
-    vmin = np.min(z)
-    vmax = np.max(z)
-    # plot a contour
-    plt.subplot(grid)
-    plt.contour(x, y, z, colors='k', linewidths=0.2, levels=levels)
-    plt.contourf(x, y, z, cmap='rainbow', levels=levels, norm=Normalize(vmin=vmin, vmax=vmax))
-    plt.title(title)
-    cbar = plt.colorbar(pad=0.03, aspect=25, format='%.0e')
-    cbar.mappable.set_clim(vmin, vmax)
 
 
 # create meshgrid coordinates (x, y) for test plots
