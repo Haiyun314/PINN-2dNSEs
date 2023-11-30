@@ -277,14 +277,14 @@ if __name__ == '__main__':
         y_train = [zeros, zeros, zeros, uv_bnd]
 
         # train the model using L-BFGS-B algorithm
-        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=2000)
+        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=1000)
         lbfgs.fit()
         tf.keras.models.save_model(network, './pinn')
-
-    if not train:
-        network = tf.keras.models.load_model('./pinn')
     else:
-        assert train == True, "if the trained model doesn't exist, set the variable train as True"
+        try:
+            network = tf.keras.models.load_model('./pinn')
+        except:
+            assert train == True, "if the trained model doesn't exist, set the variable train as True"
 
     # create meshgrid coordinates (x, y) for test plots
     x = np.linspace(-1, 1, num_test_samples)
@@ -318,4 +318,3 @@ if __name__ == '__main__':
 
     # Display the plot
     plt.show()
-
