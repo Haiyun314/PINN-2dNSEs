@@ -146,12 +146,13 @@ class PINN:
         Build a PINN model for the time dependent Navier-Stokes equation.
 
         Returns:
-            PINN model for the steady Navier-Stokes equation with
+            PINN model for the time dependent Navier-Stokes equation with
                 input: [ (x, y, t) relative to equation,
                          (x, y, t) relative to boundary condition ],
-                output: [ (u, v) relative to equation (must be zero), because in our case, we assume that the external
-                force, like gravity, equals zero, here (u, v) represent the u,v directional equations, not the velocity
-                          (f_div, f_div) relative to equation (must be zero), divergence free condition,
+                output: [ (u, v) relative to equation (must be zero), as we assume a scenario with negligible external
+                forces, such as gravity. Please note that in this context, (u, v) denotes the u and v directional
+                equations, rather than direct velocity representations.
+                          (f_div, f_div) relative to equation (must be zero), divergence free condition.
                           (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same dimensions),
                           (u, v) relative to boundary condition ]
         """
@@ -276,15 +277,14 @@ if __name__ == '__main__':
         y_train = [zeros, zeros, zeros, uv_bnd]
 
         # train the model using L-BFGS-B algorithm
-        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=1000)
+        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=2000)
         lbfgs.fit()
         tf.keras.models.save_model(network, './pinn')
         # network.save('./pinn.HDF5')
 
-    try:
+    if not train:
         network = tf.keras.models.load_model('./pinn')
-        print('using trained model')
-    except:
+    else:
         assert train == True, "if the trained model doesn't exist, set the variable train as True"
 
     # create meshgrid coordinates (x, y) for test plots
