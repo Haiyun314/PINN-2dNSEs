@@ -280,7 +280,6 @@ if __name__ == '__main__':
         lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=2000)
         lbfgs.fit()
         tf.keras.models.save_model(network, './pinn')
-        # network.save('./pinn.HDF5')
 
     if not train:
         network = tf.keras.models.load_model('./pinn')
