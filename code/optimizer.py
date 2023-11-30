@@ -2,7 +2,6 @@ import scipy.optimize
 import numpy as np
 import tensorflow as tf
 
-
 class L_BFGS_B:
     """
     Optimize the keras network model using L-BFGS-B algorithm.
@@ -115,6 +114,7 @@ class L_BFGS_B:
         self.progbar.on_batch_begin(0)
         loss, _ = self.evaluate(weights)
         self.progbar.on_batch_end(0, logs=dict(zip(self.metrics, [loss])))
+
 
     def fit(self):
         """

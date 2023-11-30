@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from optimizer import L_BFGS_B
-
 tf.random.set_seed(1234)
 import matplotlib.animation as animation
 
@@ -169,11 +168,11 @@ class PINN:
         v, v_x, v_y, v_xx, v_yy = v_grads
         u_t, v_t = d_time
         # compute equation loss
-        u_eqn = u * u_x + v * u_y + u_t + p_x / self.rho - self.nu * (u_xx + u_yy)
-        v_eqn = u * v_x + v * v_y + v_t + p_y / self.rho - self.nu * (v_xx + v_yy)
+        u_eqn = tf.square(u * u_x + v * u_y + u_t + p_x / self.rho - self.nu * (u_xx + u_yy))
+        v_eqn = tf.square(u * v_x + v * v_y + v_t + p_y / self.rho - self.nu * (v_xx + v_yy))
 
         # divergence free condition
-        f_div = u_y + v_x
+        f_div = tf.square(u_y + v_x)
 
         uv_eqn = tf.concat([u_eqn, v_eqn], axis=-1)
         div_e = tf.concat([f_div, f_div], axis=-1)
@@ -230,7 +229,7 @@ def animate(i):
 
 
 if __name__ == '__main__':
-    train = False
+    train = True
     # number of training samples
     num_train_samples = 1000
     # number of test samples
@@ -245,7 +244,7 @@ if __name__ == '__main__':
 
     # setting for animation
     run_time = 4
-    number_of_frame = 300
+    number_of_frame = 100
 
     if train:
         # build a core network model
@@ -273,13 +272,14 @@ if __name__ == '__main__':
         y_train = [zeros, zeros, zeros, uv_bnd]
 
         # train the model using L-BFGS-B algorithm
-        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=100)
+        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=1000)
         lbfgs.fit()
         tf.keras.models.save_model(network, './pinn')
         # network.save('./pinn.HDF5')
 
     try:
         network = tf.keras.models.load_model('./pinn')
+        print('using trained model')
     except:
         assert train == True, "if the trained model doesn't exist, set the variable train as True"
 
