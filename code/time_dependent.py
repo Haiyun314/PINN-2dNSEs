@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from optimizer import L_BFGS_B
-from matplotlib.colors import Normalize
 
 tf.random.set_seed(1234)
 import matplotlib.animation as animation
@@ -23,7 +22,7 @@ def InitializeModel(num_hidden_layers=5, num_neurons_per_layer=8):
     Returns:
         model: return the DNN model (the output refers to the psi and pressure, the gradient of psi represents velocity)
     """
-    
+
     model = tf.keras.Sequential()  # Initialize a feedforward neural network
     model.add(tf.keras.Input(3))  # Input is three-dimensional
 
@@ -42,9 +41,8 @@ def InitializeModel(num_hidden_layers=5, num_neurons_per_layer=8):
                                     activation=tf.keras.activations.get('tanh'),
                                     kernel_initializer='glorot_normal',
                                     kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-    
-    model.add(tf.keras.layers.Dense(2))     # Output is two-dimensional
 
+    model.add(tf.keras.layers.Dense(2))  # Output is two-dimensional
 
     return model
 
@@ -134,7 +132,7 @@ class PINN:
     def __init__(self, network, rho=1, nu=0.01):
         """
         Args:
-            network: keras network model with input (x, y) and output (psi, p).
+            network: keras network model with input (x, y, t) and output (psi, p).
             rho: density.
             nu: viscosity.
         """
@@ -190,57 +188,6 @@ class PINN:
         # build PINN model for the time dependent Navier-Stokes equation
         return tf.keras.models.Model(
             inputs=[xyt_eqn, xyt_bnd], outputs=[uv_eqn, div_e, psi_bnd, uv_bnd])
-    
-    def save(self):
-        self.network.save()
-        tf.keras.models.save_model
-
-
-# number of training samples
-num_train_samples = 1000
-# number of test samples
-num_test_samples = 20
-
-# inlet flow velocity
-u0 = 1
-# density
-rho = 1
-# viscosity
-nu = 0.01
-
-# setting for animation
-run_time = 4
-number_of_frame = 300
-
-# build a core network model
-network = InitializeModel()
-network.summary()
-# build a PINN model
-pinn = PINN(network, rho=rho, nu=nu).build()
-
-# create training input
-t = [[run_time * i / num_train_samples] for i in range(num_train_samples)]
-xy_eqn = np.random.rand(num_train_samples, 2) * 2 - 1
-xyt_eqn = np.hstack((xy_eqn, t))
-xy_ub = np.random.rand(num_train_samples // 2, 2)  # top-bottom boundaries
-xy_ub[..., 1] = np.round(xy_ub[..., 1])  # y-position is 0 or 1
-xy_lr = np.random.rand(num_train_samples // 2, 2)  # left-right boundaries
-xy_lr[..., 0] = np.round(xy_lr[..., 0])  # x-position is 0 or 1
-xy_bnd = np.random.permutation(np.concatenate([xy_ub, xy_lr])) * 2 - 1
-xyt_bnd = np.hstack((xy_bnd, t))
-x_train = [xyt_eqn, xyt_bnd]
-
-
-# create training output
-zeros = np.zeros((num_train_samples, 2))
-uv_bnd = np.zeros((num_train_samples, 2))
-uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
-y_train = [zeros, zeros, zeros, uv_bnd]
-
-# train the model using L-BFGS-B algorithm
-lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=3000)
-lbfgs.fit()
-
 
 
 def uv(network, xy):
@@ -264,33 +211,6 @@ def uv(network, xy):
     return u.numpy(), v.numpy()
 
 
-
-# create meshgrid coordinates (x, y) for test plots
-x = np.linspace(-1, 1, num_test_samples)
-y = np.linspace(-1, 1, num_test_samples)
-
-x, y = np.meshgrid(x, y)
-data_u = {}
-data_psi = {}
-
-for j in range(number_of_frame):
-    t = [run_time * j / number_of_frame for i in range(np.square(num_test_samples))]
-    xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
-    # predict (psi, p)
-    psi_p = network.predict(xyt, batch_size=len(xyt))
-    psi, p = [psi_p[..., i].reshape(x.shape) for i in range(psi_p.shape[-1])]
-    # compute (u, v)
-    u, v = uv(network, xyt)
-    u = u.reshape(x.shape)
-    v = v.reshape(x.shape)
-    data_u[j] = x, y, u, v
-    data_psi[j] = psi.reshape(x.shape)
-
-fig, ax = plt.subplots(1, 2)
-# set the distance of two plot
-plt.subplots_adjust(wspace=1)
-
-
 def animate(i):
     # clear present plot on the axis to show animation
     ax[0].clear()
@@ -309,11 +229,90 @@ def animate(i):
     ax[1].set_title('Pressure Field')
 
 
-# Call animate method
-ani = animation.FuncAnimation(fig, animate, number_of_frame, interval=50, blit=False)
-anis = animation.FFMpegWriter(fps=20)
-ani.save('../image/Lid-Driven_.gif', writer='pillow')
+if __name__ == '__main__':
+    train = False
+    # number of training samples
+    num_train_samples = 1000
+    # number of test samples
+    num_test_samples = 20
 
-# Display the plot
-plt.show()
+    # inlet flow velocity
+    u0 = 1
+    # density
+    rho = 1
+    # viscosity
+    nu = 0.01
+
+    # setting for animation
+    run_time = 4
+    number_of_frame = 300
+
+    if train:
+        # build a core network model
+        network = InitializeModel()
+        network.summary()
+        # build a PINN model
+        pinn = PINN(network, rho=rho, nu=nu).build()
+
+        # create training input
+        t = [[run_time * i / num_train_samples] for i in range(num_train_samples)]
+        xy_eqn = np.random.rand(num_train_samples, 2) * 2 - 1
+        xyt_eqn = np.hstack((xy_eqn, t))
+        xy_ub = np.random.rand(num_train_samples // 2, 2)  # top-bottom boundaries
+        xy_ub[..., 1] = np.round(xy_ub[..., 1])  # y-position is 0 or 1
+        xy_lr = np.random.rand(num_train_samples // 2, 2)  # left-right boundaries
+        xy_lr[..., 0] = np.round(xy_lr[..., 0])  # x-position is 0 or 1
+        xy_bnd = np.random.permutation(np.concatenate([xy_ub, xy_lr])) * 2 - 1
+        xyt_bnd = np.hstack((xy_bnd, t))
+        x_train = [xyt_eqn, xyt_bnd]
+
+        # create training output
+        zeros = np.zeros((num_train_samples, 2))
+        uv_bnd = np.zeros((num_train_samples, 2))
+        uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
+        y_train = [zeros, zeros, zeros, uv_bnd]
+
+        # train the model using L-BFGS-B algorithm
+        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=100)
+        lbfgs.fit()
+        tf.keras.models.save_model(network, './pinn')
+        # network.save('./pinn.HDF5')
+
+    try:
+        network = tf.keras.models.load_model('./pinn')
+    except:
+        assert train == True, "if the trained model doesn't exist, set the variable train as True"
+
+    # create meshgrid coordinates (x, y) for test plots
+    x = np.linspace(-1, 1, num_test_samples)
+    y = np.linspace(-1, 1, num_test_samples)
+
+    x, y = np.meshgrid(x, y)
+    data_u = {}
+    data_psi = {}
+
+    for j in range(number_of_frame):
+        t = [run_time * j / number_of_frame for i in range(np.square(num_test_samples))]
+        xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
+        # predict (psi, p)
+        psi_p = network.predict(xyt, batch_size=len(xyt))
+        psi, p = [psi_p[..., i].reshape(x.shape) for i in range(psi_p.shape[-1])]
+        # compute (u, v)
+        u, v = uv(network, xyt)
+        u = u.reshape(x.shape)
+        v = v.reshape(x.shape)
+        data_u[j] = x, y, u, v
+        data_psi[j] = psi.reshape(x.shape)
+
+    fig, ax = plt.subplots(1, 2)
+    # set the distance of two plot
+    plt.subplots_adjust(wspace=0.4)
+
+    # Call animate method
+    ani = animation.FuncAnimation(fig, animate, number_of_frame, interval=50, blit=False)
+    anis = animation.FFMpegWriter(fps=20)
+    ani.save('../image/Lid-Driven_.gif', writer='pillow')
+
+    # Display the plot
+    plt.show()
 
