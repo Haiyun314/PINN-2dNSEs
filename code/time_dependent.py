@@ -149,8 +149,8 @@ class PINN:
             PINN model for the steady Navier-Stokes equation with
                 input: [ (x, y, t) relative to equation,
                          (x, y, t) relative to boundary condition ],
-                output: [ (u, v) relative to equation (must be zero), because in our case, we assume that the external force, like
-                          gravity, equal to zero, here (u, v) represent the u,v directional equations, not the velocity
+                output: [ (u, v) relative to equation (must be zero), because in our case, we assume that the external
+                force, like gravity, equals zero, here (u, v) represent the u,v directional equations, not the velocity
                           (f_div, f_div) relative to equation (must be zero), divergence free condition,
                           (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same dimensions),
                           (u, v) relative to boundary condition ]
@@ -179,10 +179,14 @@ class PINN:
 
         # compute gradients relative to boundary condition
         psi_bnd, _, u_grads_bnd, v_grads_bnd, d_time = self.grads(xyt_bnd)
-
+        psi_bnd = tf.square(psi_bnd)
+        u_bnd = u_grads_bnd[0]
+        v_bnd = v_grads_bnd[0]
+        u_bnd = tf.square(u_bnd)
+        v_bnd = tf.square(v_bnd)
         # compute boundary condition loss
         psi_bnd = tf.concat([psi_bnd, psi_bnd], axis=-1)
-        uv_bnd = tf.concat([u_grads_bnd[0], v_grads_bnd[0]], axis=-1)
+        uv_bnd = tf.concat([u_bnd, v_bnd], axis=-1)
 
         # build PINN model for the time dependent Navier-Stokes equation
         return tf.keras.models.Model(

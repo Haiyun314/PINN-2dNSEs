@@ -30,5 +30,9 @@ $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 **Test Result**
 
 Left side is the velocity field. Right hand side is the pressure field.
+
+100 iteration
 ![Lid-Driven](./image/Lid-Driven.gif)
+1000 iteration
+![Lid-Driven_](./image/Lid-Driven_.gif)
 
