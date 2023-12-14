@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from optimizer import L_BFGS_B
+
 tf.random.set_seed(1234)
 import matplotlib.animation as animation
 
@@ -222,19 +223,19 @@ def animate(i):
 
     _x, _y, _u, _v = data_u[i]
     ax[0].quiver(_x, _y, _u, _v, cmap='plasma')
-    ax[1].contourf(x, y, data_psi[i], cmap='plasma')
+    presure = ax[1].contourf(x, y, data_psi[i], cmap='plasma')
+
 
     # aspect ratio of plot is preserved
     ax[0].set_aspect('equal')
     ax[1].set_aspect('equal')
-
     # set title for subpltos
     ax[0].set_title('Velocity Field')
     ax[1].set_title('Pressure Field')
 
 
 if __name__ == '__main__':
-    train = True
+    train = False
     # number of training samples
     num_train_samples = 1000
     # number of test samples
@@ -245,7 +246,7 @@ if __name__ == '__main__':
     # density
     rho = 1
     # viscosity
-    nu = 0.01
+    nu = 0.1
 
     # setting for animation
     run_time = 4
@@ -314,7 +315,7 @@ if __name__ == '__main__':
     # Call animate method
     ani = animation.FuncAnimation(fig, animate, number_of_frame, interval=50, blit=False)
     anis = animation.FFMpegWriter(fps=20)
-    ani.save('../image/Lid-Driven_.gif', writer='pillow')
+    ani.save('../image/Lid-Driven__.gif', writer='pillow')
 
     # Display the plot
     plt.show()
