@@ -60,9 +60,9 @@ class GradientLayer(tf.keras.layers.Layer):
         Args:
             model: keras network model.
         """
-
         self.model = model
         super().__init__(**kwargs)
+
 
     def call(self, xyt):
         """
@@ -133,7 +133,7 @@ class PINN:
         """
         Args:
             network: keras network model with input (x, y, t) and output (psi, p).
-            rho: density.
+            RHO: density.
             nu: viscosity.
         """
 
@@ -154,8 +154,8 @@ class PINN:
                 forces, such as gravity. Please note that in this context, (u, v) denotes the u and v directional
                 equations, rather than direct velocity representations.
                           (f_div, f_div) relative to equation (must be zero), divergence free condition.
-                          (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same dimensions),
-                          (u, v) relative to boundary condition ]
+                          (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same
+                          dimensions), (u, v) relative to boundary condition ]
         """
 
         # equation input: (x, y, t)
@@ -223,8 +223,7 @@ def animate(i):
 
     _x, _y, _u, _v = data_u[i]
     ax[0].quiver(_x, _y, _u, _v, cmap='plasma')
-    presure = ax[1].contourf(x, y, data_psi[i], cmap='plasma')
-
+    ax[1].contourf(x, y, data_psi[i], cmap='plasma')
 
     # aspect ratio of plot is preserved
     ax[0].set_aspect('equal')
@@ -233,70 +232,69 @@ def animate(i):
     ax[0].set_title('Velocity Field')
     ax[1].set_title('Pressure Field')
 
-
 if __name__ == '__main__':
-    train = False
+    TRAIN = True
     # number of training samples
-    num_train_samples = 1000
+    NUM_TRAIN_SAMPLES = 1000
     # number of test samples
-    num_test_samples = 20
+    NUM_TEST_SAMPLES = 20
 
     # inlet flow velocity
-    u0 = 1
+    U0 = 1
     # density
-    rho = 1
+    RHO = 1
     # viscosity
-    nu = 0.1
+    NU = 0.1
 
     # setting for animation
-    run_time = 4
-    number_of_frame = 100
+    RUN_TIME = 4
+    NUMBER_OF_FRAMES = 100
 
-    if train:
+    if TRAIN:
         # build a core network model
         network = InitializeModel()
         network.summary()
         # build a PINN model
-        pinn = PINN(network, rho=rho, nu=nu).build()
+        pinn = PINN(network, rho=RHO, nu=NU).build()
 
         # create training input
-        t = [[run_time * i / num_train_samples] for i in range(num_train_samples)]
-        xy_eqn = np.random.rand(num_train_samples, 2) * 2 - 1
+        t = [[RUN_TIME * i / NUM_TRAIN_SAMPLES] for i in range(NUM_TRAIN_SAMPLES)]
+        xy_eqn = np.random.rand(NUM_TRAIN_SAMPLES, 2) * 2 - 1
         xyt_eqn = np.hstack((xy_eqn, t))
-        xy_ub = np.random.rand(num_train_samples // 2, 2)  # top-bottom boundaries
+        xy_ub = np.random.rand(NUM_TRAIN_SAMPLES // 2, 2)  # top-bottom boundaries
         xy_ub[..., 1] = np.round(xy_ub[..., 1])  # y-position is 0 or 1
-        xy_lr = np.random.rand(num_train_samples // 2, 2)  # left-right boundaries
+        xy_lr = np.random.rand(NUM_TRAIN_SAMPLES // 2, 2)  # left-right boundaries
         xy_lr[..., 0] = np.round(xy_lr[..., 0])  # x-position is 0 or 1
         xy_bnd = np.random.permutation(np.concatenate([xy_ub, xy_lr])) * 2 - 1
         xyt_bnd = np.hstack((xy_bnd, t))
         x_train = [xyt_eqn, xyt_bnd]
 
         # create training output
-        zeros = np.zeros((num_train_samples, 2))
-        uv_bnd = np.zeros((num_train_samples, 2))
-        uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
+        zeros = np.zeros((NUM_TRAIN_SAMPLES, 2))
+        uv_bnd = np.zeros((NUM_TRAIN_SAMPLES, 2))
+        uv_bnd[..., 0] = U0 * np.floor(xy_bnd[..., 1])
         y_train = [zeros, zeros, zeros, uv_bnd]
 
         # train the model using L-BFGS-B algorithm
-        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=1000)
+        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=300)
         lbfgs.fit()
         tf.keras.models.save_model(network, './pinn')
     else:
         try:
             network = tf.keras.models.load_model('./pinn')
         except:
-            assert train == True, "if the trained model doesn't exist, set the variable train as True"
+            assert TRAIN == True, "if the trained model doesn't exist, set the variable train as True"
 
     # create meshgrid coordinates (x, y) for test plots
-    x = np.linspace(-1, 1, num_test_samples)
-    y = np.linspace(-1, 1, num_test_samples)
+    x = np.linspace(-1, 1, NUM_TEST_SAMPLES)
+    y = np.linspace(-1, 1, NUM_TEST_SAMPLES)
 
     x, y = np.meshgrid(x, y)
     data_u = {}
     data_psi = {}
 
-    for j in range(number_of_frame):
-        t = [run_time * j / number_of_frame for i in range(np.square(num_test_samples))]
+    for j in range(NUMBER_OF_FRAMES):
+        t = [RUN_TIME * j / NUMBER_OF_FRAMES for i in range(np.square(NUM_TEST_SAMPLES))]
         xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
         # predict (psi, p)
         psi_p = network.predict(xyt, batch_size=len(xyt))
@@ -313,7 +311,7 @@ if __name__ == '__main__':
     plt.subplots_adjust(wspace=0.4)
 
     # Call animate method
-    ani = animation.FuncAnimation(fig, animate, number_of_frame, interval=50, blit=False)
+    ani = animation.FuncAnimation(fig, animate, NUMBER_OF_FRAMES, interval=50, blit=False)
     anis = animation.FFMpegWriter(fps=20)
     ani.save('../image/Lid-Driven__.gif', writer='pillow')
 
