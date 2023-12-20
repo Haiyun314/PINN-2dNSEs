@@ -77,8 +77,8 @@ class GradientLayer(tf.keras.layers.Layer):
             u_grads: u and its gradients.
             v_grads: v and its gradients.
         """
-
         x, y, t = [xyt[..., i, tf.newaxis] for i in range(xyt.shape[-1])]
+        print(x, y, t, xyt)
         with tf.GradientTape(persistent=True) as ggg:
             ggg.watch(x)
             ggg.watch(y)
@@ -170,22 +170,20 @@ class PINN:
         v, v_x, v_y, v_xx, v_yy = v_grads
         u_t, v_t = d_time
         # compute equation loss
-        u_eqn = tf.square(u * u_x + v * u_y + u_t + p_x / self.rho - self.nu * (u_xx + u_yy))
-        v_eqn = tf.square(u * v_x + v * v_y + v_t + p_y / self.rho - self.nu * (v_xx + v_yy))
+        u_eqn = u * u_x + v * u_y + u_t + p_x / self.rho - self.nu * (u_xx + u_yy)
+        v_eqn = u * v_x + v * v_y + v_t + p_y / self.rho - self.nu * (v_xx + v_yy)
 
         # divergence free condition
-        f_div = tf.square(u_y + v_x)
+        f_div = u_y + v_x
 
         uv_eqn = tf.concat([u_eqn, v_eqn], axis=-1)
         div_e = tf.concat([f_div, f_div], axis=-1)
 
         # compute gradients relative to boundary condition
         psi_bnd, _, u_grads_bnd, v_grads_bnd, d_time = self.grads(xyt_bnd)
-        psi_bnd = tf.square(psi_bnd)
+        psi_bnd = psi_bnd
         u_bnd = u_grads_bnd[0]
         v_bnd = v_grads_bnd[0]
-        u_bnd = tf.square(u_bnd)
-        v_bnd = tf.square(v_bnd)
         # compute boundary condition loss
         psi_bnd = tf.concat([psi_bnd, psi_bnd], axis=-1)
         uv_bnd = tf.concat([u_bnd, v_bnd], axis=-1)
