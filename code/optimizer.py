@@ -55,7 +55,7 @@ class L_BFGS_B:
         Args:
             flat_weights: flatten weights.
         """
-
+        print(1)
         # get model weights
         shapes = [w.shape for w in self.model.get_weights()]
         # compute splitting indices

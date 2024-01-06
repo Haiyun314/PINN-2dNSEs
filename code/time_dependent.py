@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from optimizer import L_BFGS_B
 
-tf.random.set_seed(1234)
+# tf.random.set_seed(1234)
 import matplotlib.animation as animation
 
 # Set data type
@@ -218,10 +218,13 @@ def animate(i):
     # clear present plot on the axis to show animation
     ax[0].clear()
     ax[1].clear()
-
+    global cb1
+    if cb1:
+        cb1.remove()
     _x, _y, _u, _v = data_u[i]
     ax[0].quiver(_x, _y, _u, _v, cmap='plasma')
-    ax[1].contourf(x, y, data_psi[i], cmap='plasma')
+    ax1 = ax[1].contourf(x, y, data_psi[i], cmap='plasma')
+    cb1 = plt.colorbar(ax1, ax=ax[1], shrink=0.45)
 
     # aspect ratio of plot is preserved
     ax[0].set_aspect('equal')
@@ -231,7 +234,7 @@ def animate(i):
     ax[1].set_title('Pressure Field')
 
 if __name__ == '__main__':
-    TRAIN = True
+    TRAIN = False
     # number of training samples
     NUM_TRAIN_SAMPLES = 1000
     # number of test samples
@@ -246,7 +249,7 @@ if __name__ == '__main__':
 
     # setting for animation
     RUN_TIME = 4
-    NUMBER_OF_FRAMES = 100
+    NUMBER_OF_FRAMES = 50
 
     if TRAIN:
         # build a core network model
@@ -309,6 +312,7 @@ if __name__ == '__main__':
     plt.subplots_adjust(wspace=0.4)
 
     # Call animate method
+    cb1 = None #colorbar
     ani = animation.FuncAnimation(fig, animate, NUMBER_OF_FRAMES, interval=50, blit=False)
     anis = animation.FFMpegWriter(fps=20)
     ani.save('../image/Lid-Driven__.gif', writer='pillow')
