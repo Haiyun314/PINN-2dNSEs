@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from optimizer import L_BFGS_B
+from matplotlib import ticker
 
 # tf.random.set_seed(1234)
 import matplotlib.animation as animation
@@ -148,14 +149,14 @@ class PINN:
 
         Returns:
             PINN model for the time dependent Navier-Stokes equation with
-                input: [ (x, y, t) relative to equation,
-                         (x, y, t) relative to boundary condition ],
+                input:  [ (x, y, t) relative to equation,
+                        (x, y, t) relative to boundary condition ],
                 output: [ (u, v) relative to equation (must be zero), as we assume a scenario with negligible external
-                forces, such as gravity. Please note that in this context, (u, v) denotes the u and v directional
-                equations, rather than direct velocity representations.
-                          (f_div, f_div) relative to equation (must be zero), divergence free condition.
-                          (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same
-                          dimensions), (u, v) relative to boundary condition ]
+                        forces, such as gravity. Please note that in this context, (u, v) denotes the u and v directional
+                        equations, rather than direct velocity representations.
+                        (f_div, f_div) relative to equation (must be zero), divergence free condition.
+                        (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same
+                        dimensions), (u, v) relative to boundary condition ]
         """
 
         # equation input: (x, y, t)
@@ -222,10 +223,10 @@ def animate(i):
     if cb1:
         cb1.remove()
     _x, _y, _u, _v = data_u[i]
-    ax[0].quiver(_x, _y, _u, _v, cmap='plasma')
+    ax[0].streamplot(_x, _y, _u, _v, cmap='plasma')
     ax1 = ax[1].contourf(x, y, data_psi[i], cmap='plasma')
     cb1 = plt.colorbar(ax1, ax=ax[1], shrink=0.45)
-
+    cb1.set_ticks([(i-3)/10 for i in range(7)])
     # aspect ratio of plot is preserved
     ax[0].set_aspect('equal')
     ax[1].set_aspect('equal')
@@ -277,7 +278,7 @@ if __name__ == '__main__':
         y_train = [zeros, zeros, zeros, uv_bnd]
 
         # train the model using L-BFGS-B algorithm
-        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=300)
+        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=100)
         lbfgs.fit()
         tf.keras.models.save_model(network, './pinn')
     else:
