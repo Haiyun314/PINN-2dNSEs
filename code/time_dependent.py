@@ -214,6 +214,11 @@ def uv(network, xy):
     v = -psi_p_j[..., 0, 0]
     return u.numpy(), v.numpy()
 
+def plot_loss(loss):
+    plt.plot([i for i in range(len(loss))], loss)
+    plt.ylabel('loss')
+    plt.xlabel('iterations')
+    plt.savefig('../image/loss.png')
 
 def animate(i):
     # clear present plot on the axis to show animation
@@ -235,7 +240,7 @@ def animate(i):
     ax[1].set_title('Pressure Field')
 
 if __name__ == '__main__':
-    TRAIN = False
+    TRAIN = True
     # number of training samples
     NUM_TRAIN_SAMPLES = 1000
     # number of test samples
@@ -280,43 +285,45 @@ if __name__ == '__main__':
         # train the model using L-BFGS-B algorithm
         lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=100)
         lbfgs.fit()
+        loss = lbfgs.logger
+        plot_loss(loss)
         tf.keras.models.save_model(network, './pinn')
     else:
         try:
             network = tf.keras.models.load_model('./pinn')
         except:
             assert TRAIN == True, "if the trained model doesn't exist, set the variable train as True"
+    if not TRAIN:
+        # create meshgrid coordinates (x, y) for test plots
+        x = np.linspace(-1, 1, NUM_TEST_SAMPLES)
+        y = np.linspace(-1, 1, NUM_TEST_SAMPLES)
 
-    # create meshgrid coordinates (x, y) for test plots
-    x = np.linspace(-1, 1, NUM_TEST_SAMPLES)
-    y = np.linspace(-1, 1, NUM_TEST_SAMPLES)
+        x, y = np.meshgrid(x, y)
+        data_u = {}
+        data_psi = {}
 
-    x, y = np.meshgrid(x, y)
-    data_u = {}
-    data_psi = {}
+        for j in range(NUMBER_OF_FRAMES):
+            t = [RUN_TIME * j / NUMBER_OF_FRAMES for i in range(np.square(NUM_TEST_SAMPLES))]
+            xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
+            # predict (psi, p)
+            psi_p = network.predict(xyt, batch_size=len(xyt))
+            psi, p = [psi_p[..., i].reshape(x.shape) for i in range(psi_p.shape[-1])]
+            # compute (u, v)
+            u, v = uv(network, xyt)
+            u = u.reshape(x.shape)
+            v = v.reshape(x.shape)
+            data_u[j] = x, y, u, v
+            data_psi[j] = psi.reshape(x.shape)
 
-    for j in range(NUMBER_OF_FRAMES):
-        t = [RUN_TIME * j / NUMBER_OF_FRAMES for i in range(np.square(NUM_TEST_SAMPLES))]
-        xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
-        # predict (psi, p)
-        psi_p = network.predict(xyt, batch_size=len(xyt))
-        psi, p = [psi_p[..., i].reshape(x.shape) for i in range(psi_p.shape[-1])]
-        # compute (u, v)
-        u, v = uv(network, xyt)
-        u = u.reshape(x.shape)
-        v = v.reshape(x.shape)
-        data_u[j] = x, y, u, v
-        data_psi[j] = psi.reshape(x.shape)
+        fig, ax = plt.subplots(1, 2)
+        # set the distance of two plot
+        plt.subplots_adjust(wspace=0.4)
 
-    fig, ax = plt.subplots(1, 2)
-    # set the distance of two plot
-    plt.subplots_adjust(wspace=0.4)
+        # Call animate method
+        cb1 = None #colorbar
+        ani = animation.FuncAnimation(fig, animate, NUMBER_OF_FRAMES, interval=50, blit=False)
+        anis = animation.FFMpegWriter(fps=20)
+        ani.save('../image/Lid-Driven__.gif', writer='pillow')
 
-    # Call animate method
-    cb1 = None #colorbar
-    ani = animation.FuncAnimation(fig, animate, NUMBER_OF_FRAMES, interval=50, blit=False)
-    anis = animation.FFMpegWriter(fps=20)
-    ani.save('../image/Lid-Driven__.gif', writer='pillow')
-
-    # Display the plot
-    plt.show()
+        # Display the plot
+        plt.show()

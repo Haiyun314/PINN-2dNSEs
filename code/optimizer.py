@@ -2,6 +2,7 @@ import scipy.optimize
 import numpy as np
 import tensorflow as tf
 
+
 class L_BFGS_B:
     """
     Optimize the keras network model using L-BFGS-B algorithm.
@@ -15,8 +16,6 @@ class L_BFGS_B:
         m: maximum number of variable metric corrections used to define the limited memory matrix.
         maxls: maximum number of line search steps (per iteration).
         maxiter: maximum number of iterations.
-        metris: log metrics
-        progbar: progress bar
     """
 
     def __init__(self, model, x_train, y_train, factr=10, pgtol=1e-10, m=50, maxls=50, maxiter=20000):
@@ -41,12 +40,9 @@ class L_BFGS_B:
         self.m = m
         self.maxls = maxls
         self.maxiter = maxiter
-        self.metrics = ['loss']
-        # initialize the progress bar
-        self.progbar = tf.keras.callbacks.ProgbarLogger(
-            count_mode='steps', stateful_metrics=self.metrics)
-        self.progbar.set_params({
-            'verbose': 1, 'epochs': 1, 'steps': self.maxiter, 'metrics': self.metrics})
+        # initialize the logger
+        self.logger = []
+        self.step_counter = 0
 
     def set_weights(self, flat_weights):
         """
@@ -92,7 +88,6 @@ class L_BFGS_B:
         Returns:
             loss and gradients for weights as ndarray.
         """
-
         # update weights
         self.set_weights(weights)
         # compute loss and gradients for weights
@@ -110,9 +105,11 @@ class L_BFGS_B:
         Args:
             weights: flatten weights.
         """
-        self.progbar.on_batch_begin(0)
         loss, _ = self.evaluate(weights)
-        self.progbar.on_batch_end(0, logs=dict(zip(self.metrics, [loss])))
+        self.step_counter += 1
+        stars = 6 - len(str(self.step_counter))
+        print(f'Working on iteration {"*" * stars + str(self.step_counter)}')
+        self.logger.append(loss)
 
     def fit(self):
         """
@@ -124,11 +121,7 @@ class L_BFGS_B:
             [w.flatten() for w in self.model.get_weights()])
         # optimize the weight vector
         print('Optimizer: L-BFGS-B (maxiter={})'.format(self.maxiter))
-        self.progbar.on_train_begin()
-        self.progbar.on_epoch_begin(1)
+
         scipy.optimize.fmin_l_bfgs_b(func=self.evaluate, x0=initial_weights,
                                      factr=self.factr, pgtol=self.pgtol, m=self.m,
                                      maxls=self.maxls, maxiter=self.maxiter, callback=self.callback)
-        print('testing')
-        self.progbar.on_epoch_end(1)
-        self.progbar.on_train_end()

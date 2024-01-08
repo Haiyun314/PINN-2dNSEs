@@ -29,4 +29,5 @@ $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 
 ![Lid-Driven](./image/Lid-Driven__.gif)
 
-
+**Loss**
+![loss](./image/loss.png)
