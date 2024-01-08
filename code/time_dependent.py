@@ -240,7 +240,7 @@ def animate(i):
     ax[1].set_title('Pressure Field')
 
 if __name__ == '__main__':
-    TRAIN = True
+    TRAIN = False
     # number of training samples
     NUM_TRAIN_SAMPLES = 1000
     # number of test samples
@@ -322,7 +322,7 @@ if __name__ == '__main__':
         # Call animate method
         cb1 = None #colorbar
         ani = animation.FuncAnimation(fig, animate, NUMBER_OF_FRAMES, interval=50, blit=False)
-        anis = animation.FFMpegWriter(fps=20)
+        anis = animation.FFMpegWriter(fps=10)
         ani.save('../image/Lid-Driven__.gif', writer='pillow')
 
         # Display the plot
