@@ -283,7 +283,7 @@ if __name__ == '__main__':
         y_train = [zeros, zeros, zeros, uv_bnd]
 
         # train the model using L-BFGS-B algorithm
-        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=100)
+        lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=500)
         lbfgs.fit()
         loss = lbfgs.logger
         plot_loss(loss)
