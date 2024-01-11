@@ -108,7 +108,7 @@ class L_BFGS_B:
         loss, _ = self.evaluate(weights)
         self.step_counter += 1
         stars = 6 - len(str(self.step_counter))
-        print(f'Working on iteration {"*" * stars + str(self.step_counter)}')
+        print(f'\rWorking on iteration {"*" * stars + str(self.step_counter)}', end="")
         self.logger.append(loss)
 
     def fit(self):
