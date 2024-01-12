@@ -92,5 +92,6 @@ class TestData:
             data_psi[j] = psi.reshape(x.shape)
         return data_u, data_psi, (x, y)
 
-a, b, coordinates = TestData.test_data()
-print(a, b)
+#
+# a, b, coordinates = TestData.test_data()
+# print(a, b)

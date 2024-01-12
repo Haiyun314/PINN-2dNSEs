@@ -6,6 +6,7 @@ from optimizer import L_BFGS_B
 import matplotlib.animation as animation
 from data import TrainData, TestData
 import data as dt
+import argparse
 
 # Set data type
 DTYPE = 'float32'
@@ -211,8 +212,17 @@ def animate(i):
     ax[1].set_title('Pressure Field')
 
 
+def argp():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--train', '-t', type=str, help='True for train or false for test')
+    args = parser.parse_args()
+
+    global TRAIN
+    TRAIN = args.train.lowercase == 'true' if args.train else False
+
 if __name__ == '__main__':
-    TRAIN = True
+    TRAIN = False
+    argp()
     if TRAIN:  # train model
         # build a core network model
         network = InitializeModel()
@@ -224,8 +234,9 @@ if __name__ == '__main__':
         lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=dt.MAX_ITER)
         lbfgs.fit()
         loss = lbfgs.logger
-        # plot_loss(loss)
-        # tf.keras.models.save_model(network, './pinn')
+        # save loss and model
+        plot_loss(loss)
+        tf.keras.models.save_model(network, './pinn')
     else:  # test model
         data_u, data_psi, coordinates = TestData.test_data()
         fig, ax = plt.subplots(1, 2)
@@ -236,7 +247,9 @@ if __name__ == '__main__':
         cb1 = None  # colorbar
         ani = animation.FuncAnimation(fig, animate, dt.NUMBER_OF_FRAMES, interval=50, blit=False)
         anis = animation.FFMpegWriter(fps=10)
-        # ani.save('../image/Lid-Driven__.gif', writer='pillow')
+
+        # save v, p animation
+        ani.save('../image/Lid-Driven__.gif', writer='pillow')
 
         # Display the plot
         plt.show()
