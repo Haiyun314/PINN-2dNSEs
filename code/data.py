@@ -88,6 +88,9 @@ class TestData:
             u, v = uv(network, xyt)
             u = u.reshape(x.shape)
             v = v.reshape(x.shape)
-            data_u[j] = x, y, u, v
+            data_u[j] = u, v
             data_psi[j] = psi.reshape(x.shape)
-        return data_u, data_psi
+        return data_u, data_psi, (x, y)
+
+a, b, coordinates = TestData.test_data()
+print(a, b)

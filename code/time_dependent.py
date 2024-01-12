@@ -197,8 +197,9 @@ def animate(i):
     global cb1
     if cb1:
         cb1.remove()
-    _x, _y, _u, _v = data_u[i]
-    ax[0].streamplot(_x, _y, _u, _v, cmap='plasma')
+    _u, _v = data_u[i]
+    x, y = coordinates
+    ax[0].streamplot(x, y, _u, _v, cmap='plasma')
     ax1 = ax[1].contourf(x, y, data_psi[i], cmap='plasma')
     cb1 = plt.colorbar(ax1, ax=ax[1], shrink=0.45)
     cb1.set_ticks([(i - 3) / 10 for i in range(7)])
@@ -223,10 +224,10 @@ if __name__ == '__main__':
         lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=dt.MAX_ITER)
         lbfgs.fit()
         loss = lbfgs.logger
-        plot_loss(loss)
-        tf.keras.models.save_model(network, './pinn')
+        # plot_loss(loss)
+        # tf.keras.models.save_model(network, './pinn')
     else:  # test model
-        data_u, data_psi = TestData.test_data()
+        data_u, data_psi, coordinates = TestData.test_data()
         fig, ax = plt.subplots(1, 2)
         # set the distance of two plot
         plt.subplots_adjust(wspace=0.4)
@@ -235,7 +236,7 @@ if __name__ == '__main__':
         cb1 = None  # colorbar
         ani = animation.FuncAnimation(fig, animate, dt.NUMBER_OF_FRAMES, interval=50, blit=False)
         anis = animation.FFMpegWriter(fps=10)
-        ani.save('../image/Lid-Driven__.gif', writer='pillow')
+        # ani.save('../image/Lid-Driven__.gif', writer='pillow')
 
         # Display the plot
         plt.show()
