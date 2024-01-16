@@ -1,10 +1,9 @@
 import tensorflow as tf
-import numpy as np
 import matplotlib.pyplot as plt
 from optimizer import L_BFGS_B
 # tf.random.set_seed(1234)
 import matplotlib.animation as animation
-from data import TrainData, TestData
+from data import Data
 import data as dt
 import argparse
 
@@ -220,6 +219,7 @@ def argp():
     global TRAIN
     TRAIN = args.train.lowercase == 'true' if args.train else False
 
+
 if __name__ == '__main__':
     TRAIN = False
     argp()
@@ -229,7 +229,7 @@ if __name__ == '__main__':
         network.summary()
         # build a PINN model
         pinn = PINN(network, rho=dt.RHO, nu=dt.NU).build()
-        x_train, y_train = TrainData.lid_driven_cavity()
+        x_train, y_train = Data.lid_driven_cavity()
         # train the model using L-BFGS-B algorithm
         lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=dt.MAX_ITER)
         lbfgs.fit()
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         plot_loss(loss)
         tf.keras.models.save_model(network, './pinn')
     else:  # test model
-        data_u, data_psi, coordinates = TestData.test_data()
+        data_u, data_psi, coordinates = Data.test_model()
         fig, ax = plt.subplots(1, 2)
         # set the distance of two plot
         plt.subplots_adjust(wspace=0.4)
