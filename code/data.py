@@ -42,12 +42,13 @@ def uv(network, xy):
 
 
 class Data:
+    """
+    use test_data method to view the points' distribution.
+    """
     @staticmethod
     def lid_driven_cavity():
         # create training input
         t = [[RUN_TIME * i / NUM_TRAIN_SAMPLES] for i in range(NUM_TRAIN_SAMPLES)]
-        xy_eqn = np.random.rand(NUM_TRAIN_SAMPLES, 2) * 2 - 1
-        boundary_points = np.hstack((xy_eqn, t))
         xy_ub = np.random.rand(NUM_TRAIN_SAMPLES // 2, 2)  # top-bottom boundaries
         xy_ub[..., 1] = np.round(xy_ub[..., 1])  # y-position is 0 or 1
         xy_lr = np.random.rand(NUM_TRAIN_SAMPLES // 2, 2)  # left-right boundaries
@@ -74,15 +75,25 @@ class Data:
             t = [RUN_TIME * j / NUMBER_OF_FRAMES for _ in range(np.square(NUM_TEST_SAMPLES))]
             xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
             init_data = np.concatenate((init_data, xyt))
-        mask_condition = ((0, 1), (0, -1), (1, 0), (-1, 0))
-        # masks on x=1, x=-1, y= 1, y= -1
+        mask_condition = ((0, 1), (0, -1), (1, 1), (1, -1))
+        # masks at x=1, x=-1, y= 1, y= -1
         masks = [[init_data[:, col] == val] for col, val in mask_condition]
         mask = np.logical_or.reduce(masks)[0]
         boundary_points = init_data[mask]
+        boundary_points = np.tile(boundary_points, (5, 1))[:16200]
+        np.random.shuffle(boundary_points)
         interior_points = init_data[~mask]
         x_train = [interior_points, boundary_points]
-
-        return interior_points, boundary_points
+        zeros_inter = np.zeros((len(interior_points), 2))  # interior NSEs and div free conditions
+        zeros_bnd = np.zeros((len(boundary_points), 2))  # boundary velocity conditions
+        # points at the line x = 1 and x = -1
+        mask_bnd = np.logical_or(boundary_points[:, 0] == 1, boundary_points[:, 0] == -1)
+        # set the points at x1 and x2 with y directional velocity equal to 0, x directional velocity equal to 1
+        zeros_bnd_psi = np.copy(zeros_bnd)
+        zeros_bnd[mask_bnd, 1] = 1
+        y_train = [zeros_inter, zeros_inter, zeros_bnd_psi, zeros_bnd]
+        print('Data prepared\n')
+        return x_train, y_train
 
     @staticmethod
     def test_model():
@@ -111,11 +122,10 @@ class Data:
             data_u[j] = u, v
             data_psi[j] = psi.reshape(x.shape)
         return data_u, data_psi, (x, y)
+
     @staticmethod
     def test_data(interior_points, boundary_points):
-        plt.scatter(interior_points[:, 0], interior_points[:, 1], c= 'red')
-        # plt.scatter(boundary_points[:, 0], boundary_points[:, 1], c='green')
+        plt.scatter(interior_points[:, 0], interior_points[:, 1], c='red')
+        plt.scatter(boundary_points[:, 0], boundary_points[:, 1], c='green')
         plt.show()
 
-ips, bps = Data.pipe()
-Data.test_data(ips, bps)

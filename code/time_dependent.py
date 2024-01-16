@@ -142,8 +142,8 @@ class PINN:
                 input:  [ (x, y, t) relative to equation,
                         (x, y, t) relative to boundary condition ],
                 output: [ (u, v) relative to equation (must be zero), as we assume a scenario with negligible external
-                        forces, such as gravity. Please note that in this context, (u, v) denotes the u and v directional
-                        equations, rather than direct velocity representations.
+                        forces, such as gravity. Please note that in our code, (u, v) denotes the u and v directional
+                        equations, not just direct velocity representations.
                         (f_div, f_div) relative to equation (must be zero), divergence free condition.
                         (psi, psi) relative to boundary condition (psi is duplicated because outputs require the same
                         dimensions), (u, v) relative to boundary condition ]
@@ -172,6 +172,7 @@ class PINN:
 
         # compute gradients relative to boundary condition
         psi_bnd, _, u_bnd, v_bnd, d_time = self.grads(xyt_bnd)
+        # those two are velocity representation
         u_bnd = u_bnd[0]
         v_bnd = v_bnd[0]
         # compute boundary condition loss
@@ -211,25 +212,15 @@ def animate(i):
     ax[1].set_title('Pressure Field')
 
 
-def argp():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--train', '-t', type=str, help='True for train or false for test')
-    args = parser.parse_args()
-
-    global TRAIN
-    TRAIN = args.train.lowercase == 'true' if args.train else False
-
-
 if __name__ == '__main__':
     TRAIN = False
-    argp()
     if TRAIN:  # train model
         # build a core network model
         network = InitializeModel()
         network.summary()
         # build a PINN model
         pinn = PINN(network, rho=dt.RHO, nu=dt.NU).build()
-        x_train, y_train = Data.lid_driven_cavity()
+        x_train, y_train = Data.pipe()
         # train the model using L-BFGS-B algorithm
         lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=dt.MAX_ITER)
         lbfgs.fit()
@@ -240,16 +231,16 @@ if __name__ == '__main__':
     else:  # test model
         data_u, data_psi, coordinates = Data.test_model()
         fig, ax = plt.subplots(1, 2)
+        fig.suptitle('Pipe')
         # set the distance of two plot
         plt.subplots_adjust(wspace=0.4)
-
         # Call animate method
         cb1 = None  # colorbar
         ani = animation.FuncAnimation(fig, animate, dt.NUMBER_OF_FRAMES, interval=50, blit=False)
         anis = animation.FFMpegWriter(fps=10)
 
         # save v, p animation
-        ani.save('../image/Lid-Driven__.gif', writer='pillow')
+        ani.save('../image/Pipe.gif', writer='pillow')
 
         # Display the plot
         plt.show()
