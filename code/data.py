@@ -30,7 +30,6 @@ def uv(network, xy):
     Returns:
         (u, v) as ndarray.
     """
-
     xy = tf.constant(xy)
     with tf.GradientTape() as g:
         g.watch(xy)
@@ -43,30 +42,43 @@ def uv(network, xy):
 
 class Data:
     """
-    use test_data method to view the points' distribution.
+    Utilize the "test_data" method to inspect the dataset.
     """
+
     @staticmethod
     def lid_driven_cavity():
+        """
+        To generate the training graph, where one side has directional velocity one, all
+        other components equal to zero.
+        :return: The training positions and target outputs.
+        """
         # create training input
         t = [[RUN_TIME * i / NUM_TRAIN_SAMPLES] for i in range(NUM_TRAIN_SAMPLES)]
+        xy_eqn = np.random.rand(NUM_TRAIN_SAMPLES, 2) * 2 -1
+        xyt_eqn = np.hstack((xy_eqn, t))
         xy_ub = np.random.rand(NUM_TRAIN_SAMPLES // 2, 2)  # top-bottom boundaries
         xy_ub[..., 1] = np.round(xy_ub[..., 1])  # y-position is 0 or 1
         xy_lr = np.random.rand(NUM_TRAIN_SAMPLES // 2, 2)  # left-right boundaries
         xy_lr[..., 0] = np.round(xy_lr[..., 0])  # x-position is 0 or 1
         xy_bnd = np.random.permutation(np.concatenate([xy_ub, xy_lr])) * 2 - 1
-        boundary_points = np.hstack((xy_bnd, t))
-        x_train = [boundary_points, boundary_points]
+        xyt_bnd = np.hstack((xy_bnd, t))
+        x_train = [xyt_eqn, xyt_bnd]
 
         # create training output
         zeros = np.zeros((NUM_TRAIN_SAMPLES, 2))
         uv_bnd = np.zeros((NUM_TRAIN_SAMPLES, 2))
-        uv_bnd[..., 0] = U0 * np.floor(xy_bnd[..., 1])
+        mask = xy_bnd[..., 0] == -1
+        uv_bnd[mask, 1] = 1
         y_train = [zeros, zeros, zeros, uv_bnd]
-        print('Data prepared\n')
-        return x_train, y_train
+        return x_train, y_train, Data.lid_driven_cavity.__name__
 
     @staticmethod
     def pipe():
+        """
+        To generate the Pipe graph, where the inlet and outlet have same directional velocity one, all other
+        components equal to zero.
+        :return: The training positions and target outputs.
+        """
         init_data = np.empty((0, 3))
         x = np.linspace(-1, 1, NUM_TEST_SAMPLES)
         y = np.linspace(-1, 1, NUM_TEST_SAMPLES)
@@ -76,29 +88,29 @@ class Data:
             xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
             init_data = np.concatenate((init_data, xyt))
         mask_condition = ((0, 1), (0, -1), (1, 1), (1, -1))
-        # masks at x=1, x=-1, y= 1, y= -1
+        # masks on x=1, x=-1, y= 1, y= -1
         masks = [[init_data[:, col] == val] for col, val in mask_condition]
         mask = np.logical_or.reduce(masks)[0]
-        boundary_points = init_data[mask]
-        boundary_points = np.tile(boundary_points, (5, 1))[:16200]
-        np.random.shuffle(boundary_points)
         interior_points = init_data[~mask]
+        boundary_points = init_data[mask]
+        boundary_points = np.tile(boundary_points, (5, 1))[:len(interior_points)]  # to get same the number of points
+        np.random.shuffle(boundary_points)
         x_train = [interior_points, boundary_points]
         zeros_inter = np.zeros((len(interior_points), 2))  # interior NSEs and div free conditions
         zeros_bnd = np.zeros((len(boundary_points), 2))  # boundary velocity conditions
-        # points at the line x = 1 and x = -1
+        # points on the line x = 1 and x = -1
         mask_bnd = np.logical_or(boundary_points[:, 0] == 1, boundary_points[:, 0] == -1)
         # set the points at x1 and x2 with y directional velocity equal to 0, x directional velocity equal to 1
         zeros_bnd_psi = np.copy(zeros_bnd)
-        zeros_bnd[mask_bnd, 1] = 1
+        zeros_bnd[mask_bnd, 0] = 1
         y_train = [zeros_inter, zeros_inter, zeros_bnd_psi, zeros_bnd]
         print('Data prepared\n')
-        return x_train, y_train
+        return x_train, y_train, Data.pipe.__name__
 
     @staticmethod
-    def test_model():
+    def test_model(name: str):
         try:
-            network = tf.keras.models.load_model('./pinn')
+            network = tf.keras.models.load_model(f'./{name}')
         except FileNotFoundError:
             raise FileNotFoundError("can't find the pinn model")
         # create meshgrid coordinates (x, y) for test plots
@@ -121,11 +133,31 @@ class Data:
             v = v.reshape(x.shape)
             data_u[j] = u, v
             data_psi[j] = psi.reshape(x.shape)
-        return data_u, data_psi, (x, y)
+        return data_u, data_psi, (x, y), name
 
     @staticmethod
-    def test_data(interior_points, boundary_points):
-        plt.scatter(interior_points[:, 0], interior_points[:, 1], c='red')
-        plt.scatter(boundary_points[:, 0], boundary_points[:, 1], c='green')
+    def test_data(data):
+        input_data, output_data = data
+        fig, ax = plt.subplots(1, 2)
+        interior_points, boundary_points = input_data
+        # pick up the conditions for interior equations and boundary velocity.
+        interior_outputs = output_data[0]
+        boundary_outputs = output_data[3]
+
+        ax[0].scatter(interior_points[:, 0], interior_points[:, 1], c='red', alpha=0.6)
+        ax[0].scatter(boundary_points[:, 0], boundary_points[:, 1], c='green', alpha=0.2)
+        ax[0].set_title('input_data')
+        ax[0].set_aspect('equal')
+        ax[1].set_aspect('equal')
+        ax[1].quiver(interior_points[:, 0], interior_points[:, 1], interior_outputs[:, 0],
+                     interior_outputs[:, 1], scale=3, color='red', alpha=0.6)
+        ax[1].quiver(boundary_points[:, 0], boundary_points[:, 1], boundary_outputs[:, 0],
+                     boundary_outputs[:, 1], scale=3, color='green', alpha=0.6)
+        ax[1].set_title('output_data')
+
         plt.show()
+
+
+# data = Data.lid_driven_cavity()
+# Data.test_data(data[:2])
 

@@ -5,8 +5,6 @@ from optimizer import L_BFGS_B
 import matplotlib.animation as animation
 from data import Data
 import data as dt
-import argparse
-
 # Set data type
 DTYPE = 'float32'
 tf.keras.backend.set_floatx(DTYPE)
@@ -184,11 +182,11 @@ class PINN:
             inputs=[xyt_eqn, xyt_bnd], outputs=[uv_eqn, div_e, psi_bnd, uv_bnd])
 
 
-def plot_loss(loss):
+def plot_loss(loss, name: str):
     plt.plot([i for i in range(len(loss))], loss)
     plt.ylabel('loss')
     plt.xlabel('iterations')
-    plt.savefig('../image/loss.png')
+    plt.savefig('../image/' + name + ' loss.png')
 
 
 def animate(i):
@@ -213,25 +211,27 @@ def animate(i):
 
 
 if __name__ == '__main__':
-    TRAIN = False
+    TRAIN = True
+    name = 'pipe'
     if TRAIN:  # train model
         # build a core network model
         network = InitializeModel()
         network.summary()
         # build a PINN model
         pinn = PINN(network, rho=dt.RHO, nu=dt.NU).build()
-        x_train, y_train = Data.pipe()
+        x_train, y_train, name = Data.pipe()
         # train the model using L-BFGS-B algorithm
         lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=dt.MAX_ITER)
         lbfgs.fit()
         loss = lbfgs.logger
         # save loss and model
-        plot_loss(loss)
-        tf.keras.models.save_model(network, './pinn')
-    else:  # test model
-        data_u, data_psi, coordinates = Data.test_model()
+        plot_loss(loss, f'{name}')
+        tf.keras.models.save_model(network, f'./{name}')
+
+    # else:  # test model
+        data_u, data_psi, coordinates, name = Data.test_model(name)
         fig, ax = plt.subplots(1, 2)
-        fig.suptitle('Pipe')
+        fig.suptitle(f'{name}')
         # set the distance of two plot
         plt.subplots_adjust(wspace=0.4)
         # Call animate method
@@ -240,7 +240,8 @@ if __name__ == '__main__':
         anis = animation.FFMpegWriter(fps=10)
 
         # save v, p animation
-        ani.save('../image/Pipe.gif', writer='pillow')
+        ani.save(f'../image/{name}.gif', writer='pillow')
 
         # Display the plot
         plt.show()
+

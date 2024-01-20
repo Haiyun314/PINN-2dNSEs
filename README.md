@@ -17,7 +17,7 @@ $\mathbf{v} = \left ( u , v \right )$ is the velocity vector. $\mathrm{}{p}$ is 
 
 **Loss functions**
 
-![loss-functions](./image/loss-functions.png)
+![loss-functions](./image/loss-function.png)
 
 $$ F_x = \frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} + v \frac{\partial u}{\partial y} + \frac{1}{\rho} \frac{\partial p}{\partial x} - \nu \left(\frac{\partial^2 u}{\partial x^2} - \frac{\partial^2 u}{\partial y^2}\right) $$
 
@@ -27,9 +27,9 @@ $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 
 **Test Result**
 
-![Lid-Driven](./image/Lid-Driven__.gif)
+![Lid-Driven](./image/lid_driven_cavity.gif)
 
-![Pipe](./image/Pipe.gif)
+![Pipe](./image/pipe.gif)
 **Loss**
 
-![loss](./image/loss.png)
+![loss](./image/lid_driven_cavity loss.png)
