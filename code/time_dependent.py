@@ -186,7 +186,7 @@ def plot_loss(loss, name: str):
     plt.plot([i for i in range(len(loss))], loss)
     plt.ylabel('loss')
     plt.xlabel('iterations')
-    plt.savefig('../image/' + name + ' loss.png')
+    plt.savefig('../image/' + name + '_loss.png')
 
 
 def animate(i):

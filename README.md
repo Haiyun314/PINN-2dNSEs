@@ -32,4 +32,4 @@ $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 ![Pipe](./image/pipe.gif)
 **Loss**
 
-![loss](./image/lid_driven_cavity loss.png)
+![loss](./image/lid_driven_cavity_loss.png)
