@@ -29,6 +29,7 @@ $$ D_{free} = \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} $$
 
 ![Lid-Driven](./image/lid_driven_cavity.gif)
 
+Conducted pipe tests using both randomly generated training coordinates and standard grid coordinates, and the results were consistent across both datasets.
 ![Pipe](./image/pipe.gif)
 **Loss**
 

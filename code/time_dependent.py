@@ -201,7 +201,7 @@ def animate(i):
     ax[0].streamplot(x, y, _u, _v, cmap='plasma')
     ax1 = ax[1].contourf(x, y, data_psi[i], cmap='plasma')
     cb1 = plt.colorbar(ax1, ax=ax[1], shrink=0.45)
-    cb1.set_ticks([(i - 3) / 10 for i in range(7)])
+    # cb1.set_ticks([(i - 3) / 10 for i in range(7)])
     # aspect ratio of plot is preserved
     ax[0].set_aspect('equal')
     ax[1].set_aspect('equal')
@@ -211,8 +211,8 @@ def animate(i):
 
 
 if __name__ == '__main__':
-    TRAIN = True
-    name = 'pipe'
+    TRAIN = False
+    name = 'lid_driven_cavity'
     if TRAIN:  # train model
         # build a core network model
         network = InitializeModel()
@@ -228,9 +228,9 @@ if __name__ == '__main__':
         plot_loss(loss, f'{name}')
         tf.keras.models.save_model(network, f'./{name}')
 
-    # else:  # test model
+    else:  # test model
         data_u, data_psi, coordinates, name = Data.test_model(name)
-        fig, ax = plt.subplots(1, 2)
+        fig, ax = plt.subplots(1, 2,figsize=(10, 5))
         fig.suptitle(f'{name}')
         # set the distance of two plot
         plt.subplots_adjust(wspace=0.4)
