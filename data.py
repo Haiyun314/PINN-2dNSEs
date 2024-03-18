@@ -81,29 +81,30 @@ class Data:
         """
         init_data = np.empty((0, 3))
         x = np.linspace(-1, 1, NUM_TEST_SAMPLES)
-        y = np.linspace(-1, 1, NUM_TEST_SAMPLES)
+        y = np.linspace(-0.5, 0.5, NUM_TEST_SAMPLES)
         x, y = np.meshgrid(x, y)
         for j in range(NUMBER_OF_FRAMES):
             t = [RUN_TIME * j / NUMBER_OF_FRAMES for _ in range(np.square(NUM_TEST_SAMPLES))]
             xyt = np.stack([x.flatten(), y.flatten(), t], axis=-1)
             init_data = np.concatenate((init_data, xyt))
-        mask_condition = ((0, 1), (0, -1), (1, 1), (1, -1))
-        # masks on x=1, x=-1, y= 1, y= -1
-        masks = [[init_data[:, col] == val] for col, val in mask_condition]
+
+        mask_bound_condition = ((1, 0.5), (1, -0.5))
+        # masks on y= 1, y= -1
+        masks = [[init_data[:, col] == val] for col, val in mask_bound_condition]
         mask = np.logical_or.reduce(masks)[0]
         interior_points = init_data[~mask]
         boundary_points = init_data[mask]
-        boundary_points = np.tile(boundary_points, (5, 1))[:len(interior_points)]  # to get same the number of points
+        boundary_points = np.tile(boundary_points, (len(interior_points)//len(boundary_points), 1))[:len(interior_points)]  # to get same the number of points
         np.random.shuffle(boundary_points)
         x_train = [interior_points, boundary_points]
-        zeros_inter = np.zeros((len(interior_points), 2))  # interior NSEs and div free conditions
+        zeros_interior = np.zeros((len(interior_points), 2))  # interior NSEs and div free conditions
         zeros_bnd = np.zeros((len(boundary_points), 2))  # boundary velocity conditions
-        # points on the line x = 1 and x = -1
-        mask_bnd = np.logical_or(boundary_points[:, 0] == 1, boundary_points[:, 0] == -1)
-        # set the points at x1 and x2 with y directional velocity equal to 0, x directional velocity equal to 1
+        # points on the line x = -1
+        mask_inlet = interior_points[:, 0] == -1
         zeros_bnd_psi = np.copy(zeros_bnd)
-        zeros_bnd[mask_bnd, 0] = 1
-        y_train = [zeros_inter, zeros_inter, zeros_bnd_psi, zeros_bnd]
+        zeros_interior_div = np.copy(zeros_interior) # divergence free condition
+        zeros_interior[mask_inlet, 0] = 1 # set inlet x directional NSE equal to 1
+        y_train = [zeros_interior, zeros_interior_div, zeros_bnd_psi, zeros_bnd]
         print('Data prepared\n')
         return x_train, y_train, Data.pipe.__name__
 
@@ -115,7 +116,7 @@ class Data:
             raise FileNotFoundError("can't find the pinn model")
         # create meshgrid coordinates (x, y) for test plots
         x = np.linspace(-1, 1, NUM_TEST_SAMPLES)
-        y = np.linspace(-1, 1, NUM_TEST_SAMPLES)
+        y = np.linspace(-0.5, 0.5, NUM_TEST_SAMPLES)
 
         x, y = np.meshgrid(x, y)
         data_u = {}
@@ -158,6 +159,6 @@ class Data:
         plt.show()
 
 
-# data = Data.lid_driven_cavity()
+# data = Data.pipe()
 # Data.test_data(data[:2])
 

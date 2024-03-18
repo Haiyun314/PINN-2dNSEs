@@ -5,6 +5,7 @@ from optimizer import L_BFGS_B
 import matplotlib.animation as animation
 from data import Data
 import data as dt
+
 # Set data type
 DTYPE = 'float32'
 tf.keras.backend.set_floatx(DTYPE)
@@ -67,7 +68,6 @@ class GradientLayer(tf.keras.layers.Layer):
             v_grads: v and its gradients.
         """
         x, y, t = [xyt[..., i, tf.newaxis] for i in range(xyt.shape[-1])]
-        print(x, y, t, xyt)
         with tf.GradientTape(persistent=True) as ggg:
             ggg.watch(x)
             ggg.watch(y)
@@ -159,13 +159,13 @@ class PINN:
         v, v_x, v_y, v_xx, v_yy = v_grads
         u_t, v_t = d_time
         # compute equation loss
-        u_eqn = u * u_x + v * u_y + u_t + p_x / self.rho - self.nu * (u_xx + u_yy)
-        v_eqn = u * v_x + v * v_y + v_t + p_y / self.rho - self.nu * (v_xx + v_yy)
+        u_eqn = u * u_x + v * u_y + u_t + p_y / self.rho - self.nu * (u_xx + u_yy)
+        v_eqn = u * v_x + v * v_y + v_t + p_x / self.rho - self.nu * (v_xx + v_yy)
 
         # divergence free condition
         f_div = u_y + v_x
 
-        uv_eqn = tf.concat([u_eqn, v_eqn], axis=-1)
+        uv_eqn = tf.concat([v_eqn, u_eqn], axis=-1)
         div_e = tf.concat([f_div, f_div], axis=-1)
 
         # compute gradients relative to boundary condition
@@ -200,7 +200,7 @@ def animate(i):
     x, y = coordinates
     ax[0].streamplot(x, y, _u, _v, cmap='plasma')
     ax1 = ax[1].contourf(x, y, data_psi[i], cmap='plasma')
-    cb1 = plt.colorbar(ax1, ax=ax[1], shrink=0.45)
+    cb1 = plt.colorbar(ax1, ax=ax[1], shrink=0.65)
     # cb1.set_ticks([(i - 3) / 10 for i in range(7)])
     # aspect ratio of plot is preserved
     ax[0].set_aspect('equal')
@@ -211,8 +211,8 @@ def animate(i):
 
 
 if __name__ == '__main__':
-    TRAIN = False
-    name = 'lid_driven_cavity'
+    TRAIN = True
+    name = 'pipe'
     if TRAIN:  # train model
         # build a core network model
         network = InitializeModel()
@@ -225,12 +225,12 @@ if __name__ == '__main__':
         lbfgs.fit()
         loss = lbfgs.logger
         # save loss and model
-        plot_loss(loss, f'{name}')
+        # plot_loss(loss, f'{name}')
         tf.keras.models.save_model(network, f'./{name}')
 
-    else:  # test model
+    # else:  # test model
         data_u, data_psi, coordinates, name = Data.test_model(name)
-        fig, ax = plt.subplots(1, 2,figsize=(10, 5))
+        fig, ax = plt.subplots(1, 2, figsize=(10, 5))
         fig.suptitle(f'{name}')
         # set the distance of two plot
         plt.subplots_adjust(wspace=0.4)
@@ -240,8 +240,7 @@ if __name__ == '__main__':
         anis = animation.FFMpegWriter(fps=10)
 
         # save v, p animation
-        ani.save(f'../image/{name}.gif', writer='pillow')
+        # ani.save(f'../image/{name}.gif', writer='pillow', fps=10)
 
         # Display the plot
         plt.show()
-
